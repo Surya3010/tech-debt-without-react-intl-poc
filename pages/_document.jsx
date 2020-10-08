@@ -1,49 +1,39 @@
-import Document, {
-  Html,
-  Head,
-  Main,
-  NextScript,
-  DocumentContext,
-} from 'next/document';
 
+import Document, { Head, Main, NextScript } from 'next/document'
 
-class MyDocument extends Document {
-  static async getInitialProps(ctx) {
-    const { req } = ctx;
-    const initialProps = await Document.getInitialProps(ctx);
-    const locale = (req).locale;
+// The document (which is SSR-only) needs to be customized to expose the locale
+// data for the user's locale for React Intl to work in the browser.
+export default class IntlDocument extends Document {
+  static async getInitialProps(context) {
+    const props = await super.getInitialProps(context)
+    const {
+      req: { locale, localeDataScript },
+    } = context
     return {
-      ...initialProps,
+      ...props,
       locale,
-      lang: locale ? locale.split('-')[0] : undefined,
-      nonce: (req).nonce,
-    };
+      localeDataScript,
+    }
   }
 
   render() {
-    let scriptEl;
-    if (this.props.locale) {
-      scriptEl = (
-        <script
-          nonce={this.props.nonce}
-          dangerouslySetInnerHTML={{
-            __html: `window.LOCALE="${this.props.locale}"`,
-          }}
-        ></script>
-      );
-    }
+    // Polyfill Intl API for older browsers
+    const polyfill = `https://cdn.polyfill.io/v3/polyfill.min.js?features=Intl.~locale.${this.props.locale}`
 
     return (
-      <Html lang={this.props.lang}>
+      <html>
         <Head />
         <body>
-          {scriptEl}
           <Main />
+          <script src={polyfill} />
+          <script
+            dangerouslySetInnerHTML={{
+              __html: this.props.localeDataScript,
+            }}
+          />
           <NextScript />
         </body>
-      </Html>
-    );
+      </html>
+    )
   }
 }
-
-export default MyDocument;

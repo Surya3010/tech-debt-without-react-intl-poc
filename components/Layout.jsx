@@ -1,21 +1,22 @@
-import * as React from 'react';
-import {useIntl} from 'react-intl';
-import Head from 'next/head';
-import Nav from './Nav';
+import { defineMessages, useIntl } from 'react-intl'
+import Head from 'next/head'
+import Nav from './Nav'
 
-export default function Layout({title, children}) {
-  const intl = useIntl();
+const messages = defineMessages({
+  title: {
+    id: 'title',
+    defaultMessage: 'React Intl Next.js Example',
+  },
+})
+
+export default function Layout({ title, children }) {
+  const intl = useIntl()
 
   return (
     <div>
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>
-          {title ||
-            intl.formatMessage({
-              defaultMessage: 'React Intl Next.js Example',
-            })}
-        </title>
+        <title>{title || intl.formatMessage(messages.title)}</title>
       </Head>
 
       <header>
@@ -24,5 +25,5 @@ export default function Layout({title, children}) {
 
       {children}
     </div>
-  );
+  )
 }

@@ -1,83 +1,56 @@
-import * as React from 'react';
-import { IntlProvider } from 'react-intl';
-import { polyfill } from '../polyfills';
-import App from 'next/app';
+import { createIntl, createIntlCache, RawIntlProvider } from 'react-intl'
 
-function MyApp({ Component, pageProps, locale, messages }) {
-  return (
-    <IntlProvider locale={locale} defaultLocale="en-GB" messages={messages}>
-      <Component {...pageProps} />
-    </IntlProvider>
-  );
-}
+// This is optional but highly recommended
+// since it prevents memory leak
+const cache = createIntlCache()
 
-/**
- * Get the messages and also do locale negotiation. A multi-lingual user
- * can specify locale prefs like ['ja', 'en-GB', 'en'] which is interpreted as
- * Japanese, then British English, then English
- * @param locales list of requested locales
- * @returns {[string, Promise]} A tuple containing the negotiated locale
- * and the promise of fetching the translated messages
- */
-function getMessages(locales = ['en-GB']) {
-  if (!Array.isArray(locales)) {
-    locales = [locales];
-  }
+function getMessages(language) {
   let langBundle;
-  let locale;
-  for (let i = 0; i < locales.length && !locale; i++) {
-    locale = locales[i];
-    switch (locale) {
-      case 'fr':
-        langBundle = import('../compiled-lang/fr.json');
-        break;
-      case 'en':
-        langBundle = import('../compiled-lang/en.json');
-        break;
-      case 'zh-Hans-CN':
-        langBundle = import('../compiled-lang/zh-Hans-CN.json');
-        break;
-      case 'zh-Hant-HK':
-        langBundle = import('../compiled-lang/zh-Hant-HK.json');
-        break;
-      default:
-        break;
-      // Add more languages
-    }
+  switch (language) {
+    case 'fr':
+      langBundle = import('../lang/fr.json');
+      break;
+    case 'en':
+      langBundle = import('../lang/en.json');
+      break;
+    default:
+      langBundle = import('../lang/en.json');
+      break;
+    // Add more languages
   }
-  if (!langBundle) {
-    return ['en-GB', import('../compiled-lang/en-GB.json')];
-  }
-  return [locale, langBundle];
+  return langBundle
 }
 
-const getInitialProps = async appContext => {
-  const {
-    ctx: { req },
-  } = appContext;
-  const requestedLocales =
-    (req)?.locale ||
-    (typeof navigator !== 'undefined' && navigator.languages) ||
-    // IE11
-    (typeof navigator !== 'undefined' && (navigator).userLanguage) ||
-    (typeof window !== 'undefined' && (window).LOCALE) ||
-    'en-GB';
 
-  const [supportedLocale, messagePromise] = getMessages(requestedLocales);
+function MyApp({ Component, pageProps }) {
+  const locale = typeof window !== 'undefined' && sessionStorage && sessionStorage.getItem("Language") ? sessionStorage.getItem("Language") : 'en';
+  const messages = getMessages(locale);
+  const intl = createIntl(
+    {
+      locale,
+      messages,
+    },
+    cache
+  )
+  return (
+    <RawIntlProvider value={intl}>
+      <Component {...pageProps} />
+    </RawIntlProvider>
+  )
+}
 
-  const [, messages, appProps] = await Promise.all([
-    polyfill(supportedLocale),
-    messagePromise,
-    App.getInitialProps(appContext),
-  ]);
+MyApp.getInitialProps = async ({ Component, ctx }) => {
+  let pageProps = {}
 
-  return {
-    ...(appProps),
-    locale: supportedLocale,
-    messages: messages.default,
-  };
-};
+  const { req } = ctx
+  // const locale = req?.locale ?? 'en'
+  // const messages = req?.messages ?? {}
 
-MyApp.getInitialProps = getInitialProps;
+  if (Component.getInitialProps) {
+    Object.assign(pageProps, await Component.getInitialProps(ctx))
+  }
 
-export default MyApp;
+  return { pageProps }
+}
+
+export default MyApp

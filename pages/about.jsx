@@ -1,14 +1,14 @@
-import * as React from 'react';
-import {FormattedRelativeTime, useIntl} from 'react-intl';
-import Layout from '../components/Layout';
+import { useIntl } from 'react-intl'
+import { messages } from "../components/messages"
+import Layout from '../components/Layout'
 
 export default function About() {
-  const intl = useIntl();
+  const intl = useIntl()
   return (
-    <Layout title={intl.formatMessage({defaultMessage: 'About'})}>
+    <Layout>
       <p>
-        <FormattedRelativeTime numeric="auto" value={1} unit="hour" />
+        {intl.formatMessage(messages.description)}
       </p>
     </Layout>
-  );
+  )
 }
