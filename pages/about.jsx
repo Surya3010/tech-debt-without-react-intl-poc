@@ -1,4 +1,5 @@
-import { useIntl } from 'react-intl'
+import React from 'react'
+import { useIntl } from '../components/Provider'
 import { messages } from "../components/messages"
 import Layout from '../components/Layout'
 
