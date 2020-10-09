@@ -1,38 +1,36 @@
-import * as React from 'react';
+import React, { createContext, useContext } from 'react';
+import en from '../lang/en.json';
+import fr from '../lang/fr.json';
 
-function getMessages(locale) {
+function getMessages(language) {
     let langBundle;
-    switch (locale) {
+    switch (language) {
         case 'fr':
-            langBundle = import('../compiled-lang/fr.json');
+            langBundle = fr;
             break;
         case 'en':
-            langBundle = import('../compiled-lang/en.json');
-            break;
-        case 'zh-Hans-CN':
-            langBundle = import('../compiled-lang/zh-Hans-CN.json');
-            break;
-        case 'zh-Hant-HK':
-            langBundle = import('../compiled-lang/zh-Hant-HK.json');
+            langBundle = en;
             break;
         default:
+            langBundle = en;
             break;
         // Add more languages
     }
-    if (!langBundle) {
-        return ['en-GB', import('../compiled-lang/en-GB.json')];
-    }
+    return { formatMessage: data => langBundle[data.id] }
 }
 
-export const IntlContext = React.createContext(getMessages('en-GB'))
+export const IntlContext = createContext(getMessages('en'))
 
-export const useIntl = () => React.useContext(IntlContext)
 
-export default function Provider(children) {
+export const useIntl = () => useContext(IntlContext)
+
+const IntlProvider = (props) => {
     const requestedLocales = (typeof window !== 'undefined' && sessionStorage.getItem("Language")) ?
-        sessionStorage.getItem("Language") : 'en-GB';
+        sessionStorage.getItem("Language") : 'en';
     return (
-        <IntlContext value={getMessages(requestedLocales)}>{children}</IntlContext>
+
+        <IntlContext.Provider value={getMessages(requestedLocales)}><div>{props.children}</div> </IntlContext.Provider>
     );
 }
+export default IntlProvider
 

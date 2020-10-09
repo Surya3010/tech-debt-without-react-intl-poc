@@ -1,5 +1,4 @@
-import { defineMessages } from 'react-intl'
-export const messages = defineMessages({
+export const messages = {
     description: {
         id: 'description',
         defaultMessage: 'An example app integrating React Intl with Next.js',
@@ -20,4 +19,4 @@ export const messages = defineMessages({
         id: "greeting",
         defaultMessage: "Hello, World!"
     },
-})
+}
